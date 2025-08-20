@@ -13,7 +13,6 @@ type Photo struct {
 	OldAlbumID             sql.NullString `db:"old_album_id"`
 	Title                  string         `db:"title"`
 	Description            sql.NullString `db:"description"`
-	Tags                   sql.NullString `db:"tags"`
 	License                string         `db:"license"`
 	IsStarred              bool           `db:"is_starred"`
 	ISO                    sql.NullString `db:"iso"`

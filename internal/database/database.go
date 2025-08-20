@@ -92,7 +92,7 @@ func scanPhoto(rows *sql.Rows) (*Photo, error) {
 	var photo Photo
 	err := rows.Scan(
 		&photo.ID, &photo.CreatedAt, &photo.UpdatedAt, &photo.OwnerID,
-		&photo.OldAlbumID, &photo.Title, &photo.Description, &photo.Tags,
+		&photo.OldAlbumID, &photo.Title, &photo.Description,
 		&photo.License, &photo.IsStarred, &photo.ISO, &photo.Make, &photo.Model,
 		&photo.Lens, &photo.Aperture, &photo.Shutter, &photo.Focal,
 		&photo.Latitude, &photo.Longitude, &photo.Altitude, &photo.ImgDirection,
@@ -110,7 +110,7 @@ func scanPhoto(rows *sql.Rows) (*Photo, error) {
 // photoSelectColumns returns the standard photo columns for SELECT queries
 func photoSelectColumns() string {
 	return `id, created_at, updated_at, owner_id, old_album_id, title, description, 
-	        tags, license, is_starred, iso, make, model, lens, aperture, shutter, 
+	        license, is_starred, iso, make, model, lens, aperture, shutter, 
 	        focal, latitude, longitude, altitude, img_direction, location, taken_at, 
 	        taken_at_orig_tz, initial_taken_at, initial_taken_at_orig_tz, type, 
 	        filesize, checksum, original_checksum, live_photo_short_path, 
