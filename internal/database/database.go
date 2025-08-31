@@ -14,16 +14,16 @@ import (
 )
 
 type DB struct {
-	conn *sql.DB
-	dbType string
-	blocklist map[string]bool
+	conn       *sql.DB
+	dbType     string
+	blocklist  map[string]bool
 	pinnedOnly bool
 }
 
 func NewDB(cfg *config.DatabaseConfig, albumBlocklist []string, pinnedOnly bool) (*DB, error) {
 	var dsn string
 	var driverName string
-	
+
 	switch cfg.Type {
 	case config.TypeMySQL:
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true",
@@ -39,7 +39,7 @@ func NewDB(cfg *config.DatabaseConfig, albumBlocklist []string, pinnedOnly bool)
 	default:
 		return nil, fmt.Errorf("unsupported database type: %s", cfg.Type)
 	}
-	
+
 	conn, err := sql.Open(driverName, dsn)
 	if err != nil {
 		return nil, err
@@ -74,15 +74,15 @@ func (db *DB) buildBlocklistCondition() (string, []interface{}) {
 	if len(db.blocklist) == 0 {
 		return "", nil
 	}
-	
+
 	placeholders := make([]string, 0, len(db.blocklist))
 	args := make([]interface{}, 0, len(db.blocklist))
-	
+
 	for albumID := range db.blocklist {
 		placeholders = append(placeholders, "?")
 		args = append(args, albumID)
 	}
-	
+
 	condition := fmt.Sprintf(" AND ba.id NOT IN (%s)", strings.Join(placeholders, ","))
 	return condition, args
 }
@@ -144,12 +144,12 @@ func (db *DB) GetUnsortedPhotos() ([]Photo, error) {
 
 func (db *DB) GetTopLevelAlbums() ([]Album, error) {
 	blocklistCondition, blocklistArgs := db.buildBlocklistCondition()
-	
+
 	pinnedCondition := ""
 	if db.pinnedOnly {
 		pinnedCondition = " AND ba.is_pinned = 1"
 	}
-	
+
 	query := `
 		SELECT ba.id, ba.created_at, ba.updated_at, ba.published_at, ba.title, ba.description,
 		       ba.owner_id, ba.is_nsfw, ba.is_pinned, ba.sorting_col, ba.sorting_order,
@@ -188,7 +188,7 @@ func (db *DB) GetTopLevelAlbums() ([]Album, error) {
 func (db *DB) GetPhotosWithoutAIDescription() ([]Photo, error) {
 	blocklistCondition := ""
 	var blocklistArgs []interface{}
-	
+
 	if len(db.blocklist) > 0 {
 		placeholders := make([]string, 0, len(db.blocklist))
 		for albumID := range db.blocklist {
@@ -197,7 +197,7 @@ func (db *DB) GetPhotosWithoutAIDescription() ([]Photo, error) {
 		}
 		blocklistCondition = fmt.Sprintf(" AND id NOT IN (SELECT photo_id FROM photo_album WHERE album_id IN (%s))", strings.Join(placeholders, ","))
 	}
-	
+
 	query := fmt.Sprintf(`
 		SELECT %s
 		FROM photos 
@@ -224,12 +224,12 @@ func (db *DB) GetPhotosWithoutAIDescription() ([]Photo, error) {
 
 func (db *DB) GetAlbumsWithoutAIDescription() ([]Album, error) {
 	blocklistCondition, blocklistArgs := db.buildBlocklistCondition()
-	
+
 	pinnedCondition := ""
 	if db.pinnedOnly {
 		pinnedCondition = " AND ba.is_pinned = 1"
 	}
-	
+
 	query := `
 		SELECT ba.id, ba.created_at, ba.updated_at, ba.published_at, ba.title, ba.description,
 		       ba.owner_id, ba.is_nsfw, ba.is_pinned, ba.sorting_col, ba.sorting_order,
@@ -274,14 +274,14 @@ func (db *DB) UpdatePhotoAIDescription(photoID, description string) error {
 func (db *DB) UpdateAlbumAIDescription(albumID, description string) error {
 	log.Printf("Updating AI description for album %s (description length: %d)", albumID, len(description))
 	query := `UPDATE base_albums SET _ai_description = ?, _ai_description_ts = ? WHERE id = ?`
-	
+
 	log.Printf("Executing UPDATE query for album %s", albumID)
 	result, err := db.conn.Exec(query, description, time.Now(), albumID)
 	if err != nil {
 		log.Printf("Failed to update album %s: %v", albumID, err)
 		return err
 	}
-	
+
 	rowsAffected, _ := result.RowsAffected()
 	log.Printf("Successfully updated album %s (%d rows affected)", albumID, rowsAffected)
 	return nil
@@ -293,7 +293,7 @@ func (db *DB) GetPhotosInAlbum(albumID string) ([]Photo, error) {
 		FROM photos p
 		INNER JOIN photo_album pa ON p.id = pa.photo_id
 		WHERE pa.album_id = ?
-		ORDER BY p.taken_at DESC, p.created_at DESC`, 
+		ORDER BY p.taken_at DESC, p.created_at DESC`,
 		strings.ReplaceAll(photoSelectColumns(), "id,", "p.id,"))
 
 	rows, err := db.conn.Query(query, albumID)
@@ -337,7 +337,7 @@ func (db *DB) GetAllPhotosWithoutAIDescription() ([]Photo, error) {
 	blocklistCondition := ""
 	blocklistExclude := ""
 	var allArgs []interface{}
-	
+
 	if len(db.blocklist) > 0 {
 		placeholders := make([]string, 0, len(db.blocklist))
 		for albumID := range db.blocklist {
@@ -345,14 +345,14 @@ func (db *DB) GetAllPhotosWithoutAIDescription() ([]Photo, error) {
 			allArgs = append(allArgs, albumID)
 		}
 		blocklistCondition = fmt.Sprintf(" AND ba.id NOT IN (%s)", strings.Join(placeholders, ","))
-		
+
 		// Add second set of args for the second exclusion
 		for albumID := range db.blocklist {
 			allArgs = append(allArgs, albumID)
 		}
 		blocklistExclude = fmt.Sprintf(" AND id NOT IN (SELECT photo_id FROM photo_album WHERE album_id IN (%s))", strings.Join(placeholders, ","))
 	}
-	
+
 	query := fmt.Sprintf(`
 		SELECT %s
 		FROM photos 
@@ -393,17 +393,17 @@ func (db *DB) GetPhotoSizeVariant(photoID string) (*SizeVariant, error) {
 		LIMIT 1`
 
 	row := db.conn.QueryRow(query, photoID, SizeVariantMedium, SizeVariantOriginal)
-	
+
 	var variant SizeVariant
 	err := row.Scan(
 		&variant.ID, &variant.PhotoID, &variant.Type, &variant.ShortPath,
 		&variant.Width, &variant.Height, &variant.Ratio, &variant.Filesize,
 		&variant.StorageDisk,
 	)
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &variant, nil
 }

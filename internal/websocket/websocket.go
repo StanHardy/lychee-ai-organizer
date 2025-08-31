@@ -234,7 +234,7 @@ func (h *Handler) processAlbums(conn *websocket.Conn, albums []database.Album, s
 			albumErrors = append(albumErrors, errorMsg)
 			continue
 		}
-		
+
 		log.Printf("Successfully processed album %s (%s)", album.ID, album.Title)
 	}
 
