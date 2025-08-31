@@ -425,13 +425,13 @@
                     // Handle Ctrl+j/k for navigation
                     if (event.ctrlKey) {
                         switch (event.key.toLowerCase()) {
-                            case 'j':
+                            case 'k':
                                 event.preventDefault();
                                 if (currentPhotoIndex < photos.length - 1) {
                                     setCurrentPhotoIndex(currentPhotoIndex + 1);
                                 }
                                 break;
-                            case 'k':
+                            case 'j':
                                 event.preventDefault();
                                 if (currentPhotoIndex > 0) {
                                     setCurrentPhotoIndex(currentPhotoIndex - 1);
