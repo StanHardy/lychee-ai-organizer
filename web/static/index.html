@@ -417,11 +417,41 @@
             // Add keyboard navigation
             useEffect(() => {
                 const handleKeyDown = (event) => {
-                    // Only handle arrow keys when not typing in an input field
+                    // Only handle keys when not typing in an input field
                     if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
                         return;
                     }
                     
+                    // Handle Ctrl+j/k for navigation
+                    if (event.ctrlKey) {
+                        switch (event.key.toLowerCase()) {
+                            case 'j':
+                                event.preventDefault();
+                                if (currentPhotoIndex < photos.length - 1) {
+                                    setCurrentPhotoIndex(currentPhotoIndex + 1);
+                                }
+                                break;
+                            case 'k':
+                                event.preventDefault();
+                                if (currentPhotoIndex > 0) {
+                                    setCurrentPhotoIndex(currentPhotoIndex - 1);
+                                }
+                                break;
+                            // Handle Ctrl+1, Ctrl+2, Ctrl+3 for applying album suggestions
+                            case '1':
+                            case '2':
+                            case '3':
+                                event.preventDefault();
+                                const suggestionIndex = parseInt(event.key) - 1;
+                                if (!suggestionsLoading && suggestions[suggestionIndex]) {
+                                    movePhoto(suggestions[suggestionIndex].id);
+                                }
+                                break;
+                        }
+                        return; // Skip other key handling when Ctrl is pressed
+                    }
+                    
+                    // Handle arrow keys for navigation (existing functionality)
                     switch (event.key) {
                         case 'ArrowLeft':
                             event.preventDefault();
@@ -444,7 +474,7 @@
                 return () => {
                     document.removeEventListener('keydown', handleKeyDown);
                 };
-            }, [currentPhotoIndex, photos.length]);
+            }, [currentPhotoIndex, photos.length, suggestions, suggestionsLoading]);
 
             const initWebSocket = () => {
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';

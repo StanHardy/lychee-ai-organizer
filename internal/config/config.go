@@ -32,17 +32,17 @@ type DatabaseConfig struct {
 }
 
 type OllamaConfig struct {
-	Endpoint                  string            `json:"endpoint"`
-	ImageAnalysisModel        string            `json:"image_analysis_model"`
-	DescriptionSynthesisModel string            `json:"description_synthesis_model"`
-	ContextWindow             int               `json:"context_window,omitempty"`
-	Temperature               float64           `json:"temperature,omitempty"`
-	TopP                      float64           `json:"top_p,omitempty"`
+	Endpoint                  string                 `json:"endpoint"`
+	ImageAnalysisModel        string                 `json:"image_analysis_model"`
+	DescriptionSynthesisModel string                 `json:"description_synthesis_model"`
+	ContextWindow             int                    `json:"context_window,omitempty"`
+	Temperature               float64                `json:"temperature,omitempty"`
+	TopP                      float64                `json:"top_p,omitempty"`
 	Options                   map[string]interface{} `json:"options,omitempty"`
 }
 
 type ServerConfig struct {
-	Port int `json:"port"`
+	Port int    `json:"port"`
 	Host string `json:"host"`
 }
 
@@ -88,12 +88,12 @@ func validateConfig(config *Config) error {
 	if config.Database.Type == "" {
 		return fmt.Errorf("database type is required (mysql, postgresql, or sqlite)")
 	}
-	
+
 	validTypes := map[string]bool{TypeMySQL: true, TypePostgreSQL: true, TypeSQLite: true}
 	if !validTypes[config.Database.Type] {
 		return fmt.Errorf("database type must be one of: %s, %s, %s", TypeMySQL, TypePostgreSQL, TypeSQLite)
 	}
-	
+
 	if config.Database.Type == TypeSQLite {
 		if config.Database.Database == "" {
 			return fmt.Errorf("database path is required for SQLite")

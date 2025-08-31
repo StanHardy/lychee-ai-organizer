@@ -28,9 +28,9 @@ func NewFetcher(cfg *config.LycheeConfig) *Fetcher {
 func (f *Fetcher) GetImageBytes(variant *database.SizeVariant) ([]byte, string, error) {
 	// Construct the full URL for the image
 	// The short_path format varies by variant type:
-	// - Medium/Small variants: "17/bc/ede2998bb6238e38debbede5dc6c.jpeg" 
+	// - Medium/Small variants: "17/bc/ede2998bb6238e38debbede5dc6c.jpeg"
 	// - Original variants: "original/bc/76/cf76569f88279d64fc47b12a96db.jpg"
-	
+
 	var imageURL string
 	if variant.Type == database.SizeVariantOriginal {
 		// For original variants, strip "original/" prefix and use /uploads/original/
@@ -47,26 +47,26 @@ func (f *Fetcher) GetImageBytes(variant *database.SizeVariant) ([]byte, string, 
 		}
 		imageURL = fmt.Sprintf("%s/uploads/%s/%s", f.baseURL, sizeDir, variant.ShortPath)
 	}
-	
+
 	log.Printf("Fetching image from URL: %s (variant type: %d, short_path: %s)", imageURL, variant.Type, variant.ShortPath)
-	
+
 	// Fetch the image
 	resp, err := f.client.Get(imageURL)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to fetch image from %s: %w", imageURL, err)
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, "", fmt.Errorf("failed to fetch image from %s: status %d", imageURL, resp.StatusCode)
 	}
-	
+
 	// Read the image data
 	imageData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to read image data: %w", err)
 	}
-	
+
 	// Determine MIME type from file extension
 	ext := strings.ToLower(path.Ext(variant.ShortPath))
 	var mimeType string
@@ -82,7 +82,7 @@ func (f *Fetcher) GetImageBytes(variant *database.SizeVariant) ([]byte, string, 
 	default:
 		mimeType = "image/jpeg" // Default fallback
 	}
-	
+
 	return imageData, mimeType, nil
 }
 
@@ -91,7 +91,7 @@ func (f *Fetcher) GetImageBase64(variant *database.SizeVariant) (string, string,
 	if err != nil {
 		return "", "", err
 	}
-	
+
 	base64Data := base64.StdEncoding.EncodeToString(imageData)
 	return base64Data, mimeType, nil
 }
@@ -99,10 +99,10 @@ func (f *Fetcher) GetImageBase64(variant *database.SizeVariant) (string, string,
 func (f *Fetcher) ConstructImageURL(variant *database.SizeVariant) string {
 	// Construct the full URL for the image
 	// The short_path format varies by variant type:
-	// - Medium variants: "17/bc/ede2998bb6238e38debbede5dc6c.jpeg" 
+	// - Medium variants: "17/bc/ede2998bb6238e38debbede5dc6c.jpeg"
 	// - Thumbnail variants: "thumb/72/9f/6ac4c28108f1b276a8cc45e99141.jpeg"
 	// - Original variants: "original/bc/76/cf76569f88279d64fc47b12a96db.jpg"
-	
+
 	if variant.Type == database.SizeVariantOriginal {
 		// For original variants, strip "original/" prefix and use /uploads/original/
 		shortPath := strings.TrimPrefix(variant.ShortPath, "original/")

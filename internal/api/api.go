@@ -73,12 +73,12 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	
+
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok", "service": "lychee-ai-organizer"})
 }
@@ -88,12 +88,12 @@ func (s *Server) handleUnsortedPhotos(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	
+
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -193,7 +193,7 @@ func (s *Server) handlePhotoSuggestions(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var response SuggestionResponse
-	
+
 	if len(suggestions) == 0 {
 		log.Printf("No suggestions generated for photo %s", photoID)
 		// Return empty response but not null
@@ -220,7 +220,7 @@ func (s *Server) handlePhotoSuggestions(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 	}
-	
+
 	log.Printf("Returning %d album suggestions", len(response.Albums))
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(response)
@@ -292,7 +292,7 @@ func (s *Server) getUnsortedPhotosWithVariants() ([]PhotoWithVariants, error) {
 	defer rows.Close()
 
 	photoMap := make(map[string]*PhotoWithVariants)
-	
+
 	for rows.Next() {
 		var photo database.Photo
 		var variantID, variantType, shortPath, storageDisk, ratioStr sql.NullString
@@ -327,13 +327,13 @@ func (s *Server) getUnsortedPhotosWithVariants() ([]PhotoWithVariants, error) {
 		if variantID.Valid {
 			variantIDInt, _ := strconv.ParseInt(variantID.String, 10, 64)
 			variantTypeInt, _ := strconv.Atoi(variantType.String)
-			
+
 			// Parse ratio as float64
 			var ratio float64
 			if ratioStr.Valid {
 				ratio, _ = strconv.ParseFloat(ratioStr.String, 64)
 			}
-			
+
 			variant := database.SizeVariant{
 				ID:          variantIDInt,
 				PhotoID:     photo.ID,
@@ -352,25 +352,25 @@ func (s *Server) getUnsortedPhotosWithVariants() ([]PhotoWithVariants, error) {
 	// Convert map to slice maintaining order
 	var result []PhotoWithVariants
 	seenPhotos := make(map[string]bool)
-	
+
 	// Re-run a simpler query to maintain proper order
 	orderQuery := `
 		SELECT id FROM photos 
 		WHERE id NOT IN (SELECT photo_id FROM photo_album)
 		ORDER BY taken_at DESC, created_at DESC`
-	
+
 	orderRows, err := s.db.GetDB().Query(orderQuery)
 	if err != nil {
 		return nil, err
 	}
 	defer orderRows.Close()
-	
+
 	for orderRows.Next() {
 		var photoID string
 		if err := orderRows.Scan(&photoID); err != nil {
 			return nil, err
 		}
-		
+
 		if data, exists := photoMap[photoID]; exists && !seenPhotos[photoID] {
 			result = append(result, *data)
 			seenPhotos[photoID] = true
@@ -441,12 +441,12 @@ func (s *Server) handleStatic(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	
+
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	
+
 	// Serve the React app
 	w.Header().Set("Content-Type", "text/html")
 	http.ServeFile(w, r, "web/static/index.html")

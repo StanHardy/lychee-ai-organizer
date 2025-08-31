@@ -71,7 +71,7 @@ func (app *App) Run() error {
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Starting server on %s", addr)
-	
+
 	return http.ListenAndServe(addr, nil)
 }
 
